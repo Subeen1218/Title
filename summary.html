@@ -3,11 +3,182 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>2023년 산업연관표 분석</title>
+  <title>2023 산업연관표 | 요약계수 시뮬레이터</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; background: #f3f6fb; color: #17263a;
+      font: 16px/1.65 system-ui, sans-serif;
+    }
+    main { max-width: 860px; margin: auto; padding: 32px 16px; }
+    a { color: #174b9f; }
+    section {
+      margin: 18px 0; padding: 20px; background: white;
+      border: 1px solid #d8e1ee; border-radius: 12px;
+    }
+    h1, h2 { line-height: 1.3; }
+    h2 { margin-top: 0; font-size: 1.25rem; }
+    .note { color: #47566a; }
+    .form-grid, .results {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+    }
+    label { display: block; font-weight: 700; }
+    select, input, button {
+      width: 100%; padding: 10px; margin-top: 6px; border-radius: 6px;
+      border: 1px solid #8795a8; font: inherit;
+    }
+    select, input { background: white; color: #17263a; }
+    button {
+      width: auto; margin-top: 14px; padding-inline: 22px;
+      background: #174b9f; color: white; cursor: pointer;
+    }
+    .result { padding: 12px; background: #edf3fd; border-radius: 8px; }
+    .result strong { display: block; font-size: 1.2rem; overflow-wrap: anywhere; }
+    .scroll { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    caption { text-align: left; margin-bottom: 8px; }
+    th, td { padding: 8px; border-bottom: 1px solid #d8e1ee; text-align: right; }
+    th:first-child { text-align: left; }
+    #error { color: #9c2020; }
+  </style>
 </head>
 <body>
-  <h1>2023년 산업연관표 분석</h1>
-  <p>한국은행의 공표 계수로 최종수요 증가에 따른 파급효과를 계산합니다.</p>
-  <p><a href="./summary.html">요약계수 시뮬레이터 열기 →</a></p>
+<main>
+  <a href="./index.html">← 기본부문 원자료 분석으로 돌아가기</a>
+  <h1>2023년 산업연관표 요약계수 시뮬레이터</h1>
+  <p class="note">
+    한국은행 보도자료에 공표된 요약 계수로 계산합니다.
+    결과는 개별 산업별 유발액이 아니라 경제 전체 유발액입니다.
+  </p>
+
+  <section>
+    <h2>1. 최종수요 시나리오 입력</h2>
+    <form id="scenario" novalidate>
+      <div class="form-grid">
+        <label for="sector">수요가 증가하는 부문
+          <select id="sector"></select>
+        </label>
+        <label for="amount">최종수요 증가액 (백만원)
+          <input id="amount" type="number" min="0" step="any" value="100">
+        </label>
+      </div>
+      <button type="submit">파급효과 계산</button>
+      <p id="error" role="alert" hidden></p>
+    </form>
+  </section>
+
+  <section id="output" aria-live="polite" hidden>
+    <h2>2. 경제 전체 파급효과</h2>
+    <p id="scenario-label"></p>
+    <div class="results">
+      <div class="result">생산유발액<strong id="production"></strong></div>
+      <div class="result">부가가치유발액<strong id="value-added"></strong></div>
+      <div class="result">수입유발액<strong id="imports"></strong></div>
+    </div>
+    <p class="note">
+      계산식: 최종수요 증가액 × 선택한 부문의 해당 유발계수.
+      공표 계수가 반올림된 값이므로 결과도 근사값입니다.
+    </p>
+  </section>
+
+  <section>
+    <h2>3. 사용한 요약계수</h2>
+    <div class="scroll">
+      <table>
+        <caption>2023년 공표 계수 — 최종수요 1단위당 유발액</caption>
+        <thead>
+          <tr>
+            <th scope="col">부문</th>
+            <th scope="col">생산</th>
+            <th scope="col">부가가치</th>
+            <th scope="col">수입</th>
+          </tr>
+        </thead>
+        <tbody id="coefficient-rows"></tbody>
+      </table>
+    </div>
+    <p class="note">
+      출처: 한국은행, 「2023년 산업연관표(연장표)」, PDF 15쪽,
+      '부문별 생산유발계수, 부가가치유발계수 및 수입유발계수' 표의 2023년 열.
+      이 페이지는 해당 표의 일부 부문과 전체 계수를 사용합니다.
+      '전체'는 특정 산업이 아닌 비교용 공표 계수입니다.
+    </p>
+  </section>
+</main>
+
+<script>
+  // 순서: 부문명, 생산유발계수, 부가가치유발계수, 수입유발계수
+  const coefficients = [
+    ['농림수산품', 1.936, 0.805, 0.195],
+    ['광산품', 2.055, 0.832, 0.168],
+    ['공산품', 1.975, 0.591, 0.409],
+    ['전력·가스·수도 및 폐기물', 1.638, 0.487, 0.513],
+    ['건설', 2.029, 0.788, 0.212],
+    ['서비스', 1.695, 0.857, 0.143],
+    ['전체', 1.827, 0.752, 0.248]
+  ];
+
+  const byId = (id) => document.getElementById(id);
+  const sector = byId('sector');
+  const amountInput = byId('amount');
+  const error = byId('error');
+  const output = byId('output');
+  const numberFormat = new Intl.NumberFormat('ko-KR', {
+    maximumFractionDigits: 3
+  });
+
+  coefficients.forEach(([name, production, valueAdded, imports], index) => {
+    sector.add(new Option(name === '전체' ? '전체 (비교용)' : name, index));
+
+    const row = document.createElement('tr');
+    const heading = document.createElement('th');
+    heading.scope = 'row';
+    heading.textContent = name;
+    row.appendChild(heading);
+
+    [production, valueAdded, imports].forEach((coefficient) => {
+      const cell = document.createElement('td');
+      cell.textContent = coefficient.toFixed(3);
+      row.appendChild(cell);
+    });
+
+    byId('coefficient-rows').appendChild(row);
+  });
+
+  function calculate() {
+    const amount = amountInput.valueAsNumber;
+    const [name, production, valueAdded, imports] =
+      coefficients[Number(sector.value)];
+    const results = [production, valueAdded, imports].map(
+      (coefficient) => amount * coefficient
+    );
+
+    if (!Number.isFinite(amount) || amount <= 0 ||
+        !results.every(Number.isFinite)) {
+      error.textContent = '계산 가능한 0보다 큰 금액을 백만원 단위로 입력하세요.';
+      error.hidden = false;
+      output.hidden = true;
+      return;
+    }
+
+    error.hidden = true;
+    byId('scenario-label').textContent =
+      `${name} · 최종수요 증가액 ${numberFormat.format(amount)}백만원`;
+
+    ['production', 'value-added', 'imports'].forEach((id, index) => {
+      byId(id).textContent = `${numberFormat.format(results[index])}백만원`;
+    });
+    output.hidden = false;
+  }
+
+  byId('scenario').addEventListener('submit', (event) => {
+    event.preventDefault();
+    calculate();
+  });
+
+  sector.value = '4'; // 첫 화면 예시: 건설 수요 100백만원 증가
+  calculate();
+</script>
 </body>
 </html>
