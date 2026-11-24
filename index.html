@@ -1,14 +1,18 @@
 <!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>2023 산업연관표 분석</title><style>
 *{box-sizing:border-box}body{margin:0;background:#f2f5fa;color:#172640;font:16px/1.55 system-ui,sans-serif}main{max-width:1080px;margin:auto;padding:24px 16px}header{padding:24px;background:#172f55;color:white;border-radius:14px}header a{color:white}h1,h2{line-height:1.2}h2{font-size:1.25rem;margin-top:0}section{margin:16px 0;background:white;border:1px solid #dbe3f0;border-radius:12px;padding:18px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:12px}label{display:block;font-weight:600}input,select,button{font:inherit;border:1px solid #8797ac;border-radius:6px;padding:8px;max-width:100%}input,select{width:100%;background:white}button{background:#244f91;color:white;cursor:pointer}button:disabled{opacity:.6}.scroll{overflow:auto;max-height:440px}table{border-collapse:collapse;width:100%}th,td{padding:8px;text-align:right;border-bottom:1px solid #e0e6ef}th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}thead th{position:sticky;top:0;background:#edf3fb}caption{text-align:left}small,.note{color:#47576b}#status{min-height:1.5em}a{color:#244f91}
-</style></head><body><main><header><h1>2023년 산업연관표 분석</h1><p>한국은행 연장표 · 생산자가격 · 국내 생산물의 최종수요 증가</p><a href="./summary.html">보도자료 요약계수 계산기</a></header>
-<section><h2>1. 분석 자료 불러오기</h2><label for="level">상품 분류</label><select id="level"><option>통합대분류</option><option>통합중분류</option><option>통합소분류</option><option>기본부문</option></select><p><button id="load" type="button">엑셀 불러오기</button> <a href="./(표)상품분류.xlsx">상품분류표 다운로드</a></p><p id="status" role="status"></p><small>기본부문 파일은 약 12MB라 첫 로딩에 시간이 걸릴 수 있습니다.</small></section>
+.hot{background:#dceaff}.cool{background:#eef1f5}.meter{background:#edf1f8;border-radius:5px;height:9px;margin:5px 0}.meter>span{display:block;height:100%;background:#426aa2;border-radius:5px}.interpret{padding:12px;background:#edf3fb;border-radius:8px}.scroll td button{padding:3px 8px}</style></head><body><main><header><h1>2023년 산업연관표 분석</h1><p>한국은행 연장표 · 생산자가격 · 국내 생산물의 최종수요 증가</p><a href="./summary.html">보도자료 요약계수 계산기</a></header>
+<section><h2>1. 분석 자료 불러오기</h2><label for="level">상품 분류</label><select id="level"><option>통합대분류</option><option>통합중분류</option><option>통합소분류</option><option>기본부문</option></select><p><button id="load" type="button">엑셀 불러오기</button> <a href="./(표)상품분류.xlsx">상품분류표 다운로드</a></p><p><button id="rice" type="button">기본부문 벼(0111) 바로 분석</button></p><p id="status" role="status"></p><small>기본부문 파일은 약 12MB라 첫 로딩에 시간이 걸릴 수 있습니다.</small></section>
 <div id="ready" hidden>
-<section><h2>2. 최종수요 증가 시뮬레이션</h2><form id="form"><div class="grid"><label>상품 검색<input id="search" type="search" placeholder="예: 벼 또는 0111"></label><label>수요 증가 상품<select id="sector"></select></label><label>증가액 (백만원)<input id="amount" type="number" min="0" step="any" value="100" required></label></div><p><button id="calc">파급효과 계산</button></p></form><p id="error" role="alert"></p>
+<section><h2>2. 최종수요 증가 시뮬레이션</h2><form id="form"><div class="grid"><label>상품 검색<input id="search" type="search" placeholder="기본부문 예: 벼 또는 0111"></label><label>수요 증가 상품<select id="sector"></select></label><label>증가액 (백만원)<input id="amount" type="number" min="0" step="any" value="100" required></label></div><p><button id="calc">파급효과 계산</button></p></form><p id="error" role="alert"></p>
 <div class="scroll"><table><caption id="coefftitle">선택 상품의 경제 전체 유발계수 · 최종수요 1단위당</caption><thead><tr><th scope="col">지표</th><th scope="col">유발계수</th></tr></thead><tbody id="coeff"></tbody></table></div>
-<div id="result" hidden><h3 id="scenario"></h3><div class="scroll"><table><caption id="totals"></caption><thead><tr><th scope="col">코드</th><th scope="col">유발 부문</th><th scope="col">생산</th><th scope="col">수입</th><th scope="col">부가가치</th></tr></thead><tbody id="effects"></tbody></table></div></div>
-<p class="note">유발액 = 선택한 상품 열의 부문별 유발계수 × 최종수요 증가액. 중간 계산은 반올림하지 않고 화면 표시만 반올림합니다. 취업유발효과는 대응하는 노동 자료가 없어 계산하지 않습니다.</p></section>
-<section><h2>3. 원자료 탐색</h2><div class="grid"><label>시트<select id="sheet"></select></label><label>행 검색<input id="rowsearch" type="search" placeholder="코드 또는 이름"></label><label>행 선택<select id="row"></select></label><label>열 검색<input id="colsearch" type="search" placeholder="코드 또는 이름"></label></div><p class="note" id="unit"></p><div class="scroll"><table><thead><tr><th scope="col">열 코드</th><th scope="col">열 이름</th><th scope="col">원자료 값</th></tr></thead><tbody id="raw"></tbody></table></div></section>
-</div><footer><p class="note">출처: 한국은행 「2023년 산업연관표(연장표)」 분류별 투입산출표. 분석에는 국산품 최종수요 증가를 사용하며, 수입 완제품 구매 수요는 포함하지 않습니다.</p></footer></main>
+<p class="interpret" id="interpret"></p>
+<div class="scroll"><table><caption>직접 투입구조 · 선택한 상품 생산 1단위 기준</caption><thead><tr><th>지표</th><th>값</th></tr></thead><tbody id="inputs"></tbody></table></div>
+<details><summary>직접 투입계수 상위 품목 보기</summary><div class="scroll"><table><thead><tr><th>코드</th><th>직접 투입 품목</th><th>총투입계수</th><th>국산</th><th>수입</th></tr></thead><tbody id="direct"></tbody></table></div></details>
+<div id="result" hidden><h3 id="scenario"></h3><div id="bars"></div><div class="scroll"><table><caption id="totals"></caption><thead><tr><th scope="col">코드</th><th scope="col">유발 부문</th><th scope="col">생산</th><th scope="col">수입</th><th scope="col">부가가치</th></tr></thead><tbody id="effects"></tbody></table></div></div>
+<p class="note">생산유발계수는 1 초과일 때 강조합니다. 이는 생산유발액이 수요 증가액보다 크다는 뜻이지, 분류 평균보다 높다는 뜻은 아닙니다. 유발액 = 선택한 상품 열의 부문별 유발계수 × 최종수요 증가액. 중간 계산은 반올림하지 않고 화면 표시만 반올림합니다. 취업유발효과는 대응하는 노동 자료가 없어 계산하지 않습니다.</p></section>
+<section><h2>3. 부문별 전·후방 연쇄효과 비교</h2><p>같은 분류의 전체 부문 평균은 <strong>1</strong>입니다. 1 초과는 진한 파랑, 1 미만은 회색으로 표시합니다.</p><div class="grid"><label>부문 검색<input id="linksearch" type="search"></label><label>정렬<select id="linksorder"><option value="0">영향력계수 높은 순</option><option value="1">감응도계수 높은 순</option></select></label></div><div class="scroll"><table><thead><tr><th>코드</th><th>부문</th><th>영향력계수 · 후방</th><th>감응도계수 · 전방</th></tr></thead><tbody id="links"></tbody></table></div><p class="note">후방 효과는 해당 상품의 수요가 여러 부문의 생산을 얼마나 유발하는지, 전방 효과는 모든 상품의 수요가 각각 1단위 늘 때 해당 부문의 생산이 얼마나 반응하는지 보여줍니다. 지표가 높아도 투자 수익성이나 투자 효율을 보장하지 않습니다.</p></section>
+<section><h2>4. 원자료 탐색</h2><div class="grid"><label>시트<select id="sheet"></select></label><label>행 검색<input id="rowsearch" type="search" placeholder="코드 또는 이름"></label><label>행 선택<select id="row"></select></label><label>열 검색<input id="colsearch" type="search" placeholder="코드 또는 이름"></label></div><p class="note" id="unit"></p><div class="scroll"><table><thead><tr><th scope="col">열 코드</th><th scope="col">열 이름</th><th scope="col">원자료 값</th></tr></thead><tbody id="raw"></tbody></table></div></section>
+</div><footer><p class="note">출처: 한국은행 「2023년 산업연관표(연장표)」 분류별 투입산출표. 개념과 해석: 구균철, 「산업연관표 개요」 26–34쪽. 분석에는 국산품 최종수요 증가를 사용하며, 수입 완제품 구매 수요는 포함하지 않습니다.</p></footer></main>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script>
 'use strict';
@@ -23,9 +27,11 @@ const options = (id, items) => $(id).replaceChildren(...items.map(([v,t])=>new O
 function table(id, rows){$(id).replaceChildren(...rows.map(values=>{const tr=document.createElement('tr');for(const value of values){const td=tr.insertCell();td.textContent=value;}return tr;}));}
 function invalidate(){state=null;$('ready').hidden=true;$('status').textContent='선택한 분류를 불러오세요.';}
 $('level').addEventListener('change',invalidate);
-$('load').addEventListener('click',async()=>{
+$('load').addEventListener('click',()=>load());
+$('rice').addEventListener('click',()=>{$('level').value='기본부문';load(true);});
+async function load(rice=false){
   invalidate(); const level=$('level').value,n=sizes[level];
-  $('level').disabled=$('load').disabled=true; $('status').textContent='엑셀을 읽고 계수를 확인하는 중입니다…';
+  $('rice').disabled=$('level').disabled=$('load').disabled=true; $('status').textContent='엑셀을 읽고 계수를 확인하는 중입니다…';
   try{
     if(!window.XLSX) throw Error('엑셀 읽기 기능을 불러오지 못했습니다. 인터넷 연결을 확인하고 페이지를 새로고침하세요.');
     const file=`(표)(2023연장)투입산출표_생산자가격_${level}.xlsx`;
@@ -51,21 +57,67 @@ $('load').addEventListener('click',async()=>{
         return {values,total};
       });
     });
-    state={sectors,matrices,grid,level};
-    for(const id of ['search','rowsearch','colsearch'])$(id).value='';
-    options('sheet',book.SheetNames.map(s=>[s,s])); refreshSector(); refreshRows();
-    $('ready').hidden=false;$('status').textContent=`${level} ${n}부문 · ${book.SheetNames.length}개 시트 · 유발계수 3종 열합 검증 완료`;
+    const prod=grid('생산유발계수'),headers=prod[4].map(code),sensCol=headers.indexOf('9802');
+    const prows=new Map(prod.slice(6).map(row=>[code(row[0]),row]));
+    const sum=xs=>xs.reduce((a,b)=>a+b,0);
+    const avg=sum(matrices[0].map(x=>x.total))/n;
+    const link=sectors.map(({c},i)=>{
+      const back=matrices[0][i].total/avg, forward=sum(matrices[0].map(x=>x.values[i]))/avg;
+      const official=[prows.get('9801')?.[headers.indexOf(c)],prows.get(c)?.[sensCol]];
+      if(!official.every(Number.isFinite)||Math.abs(back-official[0])>1e-8||Math.abs(forward-official[1])>1e-8)throw Error(`연쇄효과 원표 검증 실패: ${c}`);
+      return [back,forward];
+    });
+    const inputGrids=['총투입계수(A)','국산투입계수(Ad)','수입투입계수(Am)'].map(name=>{
+      const r=grid(name);
+      return {h:r[4].map(code),rows:new Map(r.slice(6).map(row=>[code(row[0]),row]))};
+    });
+    const direct=sectors.map(({c})=>inputGrids.map(({h,rows})=>{
+      const j=h.indexOf(c), col=sectors.map(x=>rows.get(x.c)?.[j]);
+      if(j<2||!col.every(Number.isFinite))throw Error(`투입계수 검증 실패: ${c}`);
+      return col;
+    }));
+    state={sectors,matrices,grid,level,link,direct};
+    for(const id of ['search','rowsearch','colsearch','linksearch'])$(id).value='';
+    options('sheet',book.SheetNames.map(s=>[s,s])); refreshSector(); refreshRows(); showLinks(); if(rice){$('search').value='0111';refreshSector();$('amount').value='100';$('form').requestSubmit();}
+    $('ready').hidden=false;$('status').textContent=`${level} ${n}부문 · ${book.SheetNames.length}개 시트 · 유발계수 열합 및 연쇄효과 검증 완료`;
   }catch(e){state=null;$('ready').hidden=true;$('status').textContent='불러오기 실패: '+e.message;}
-  finally{$('level').disabled=$('load').disabled=false;}
-});
+  finally{$('rice').disabled=$('level').disabled=$('load').disabled=false;}
+}
 function refreshSector(){const old=$('sector').value,q=$('search').value;options('sector',state.sectors.flatMap((x,i)=>match(q,x.c,x.name)?[[i,`${x.c} · ${x.name}`]]:[]));if([...$('sector').options].some(o=>o.value===old))$('sector').value=old;coeff();}
-function coeff(){const j=$('sector').selectedIndex<0?-1:Number($('sector').value);$('result').hidden=true;$('error').textContent='';$('calc').disabled=j<0;$('coefftitle').textContent=j<0?'검색 결과가 없습니다.':'선택 상품의 경제 전체 유발계수 · 최종수요 1단위당';table('coeff',j<0?[]:labels.map((x,k)=>[x,fmt(state.matrices[k][j].total,6)]));}
+const tone=(el,v)=>el.classList.add(v>1+1e-10?'hot':v<1-1e-10?'cool':'neutral');
+const relative=v=>v>1+1e-10?'평균보다 큽니다':v<1-1e-10?'평균보다 작습니다':'평균 수준입니다';
+const meaning=['국내 생산이 직접·간접으로 얼마나 늘어나는지','생산 과정에 필요한 수입 중간재가 직접·간접으로 얼마나 늘어나는지','국내에서 새로 창출되는 부가가치가 얼마나 늘어나는지'];
+function coeff(){
+ const j=$('sector').selectedIndex<0?-1:Number($('sector').value);
+ $('result').hidden=true;$('error').textContent='';$('calc').disabled=j<0;
+ $('coefftitle').textContent=j<0?'현재 분류에 검색 결과가 없습니다. 벼·0111은 기본부문에서 검색하세요.':'선택 상품의 경제 전체 유발계수 · 최종수요 1단위당';
+ if(j<0){for(const id of ['coeff','inputs','direct'])table(id,[]);$('interpret').textContent='';return;}
+ const x=state.sectors[j], [back,forward]=state.link[j];
+ const values=state.matrices.map(m=>m[j].total);
+ table('coeff',labels.map((name,k)=>[`${name}유발계수 — ${meaning[k]}`,fmt(values[k],6)]));
+ if(values[0]>1)tone($('coeff').rows[0].cells[1],values[0]);
+ $('interpret').textContent=`${x.name} · 영향력계수 ${fmt(back,6)}: 후방연쇄효과가 같은 분류의 ${relative(back)}. 감응도계수 ${fmt(forward,6)}: 전방연쇄효과가 같은 분류의 ${relative(forward)}.`;
+ const [all,dom,imp]=state.direct[j], sum=xs=>xs.reduce((a,b)=>a+b,0);
+ const allSum=sum(all), impSum=sum(imp);
+ table('inputs', [['중간투입률 (국산+수입 중간재 ÷ 총투입)',fmt(100*allSum,3)+'%'],['수입의존도 (수입 중간재 ÷ 총투입)',fmt(100*impSum,3)+'%']]);
+ table('direct',state.sectors.map((y,i)=>[y.c,y.name,all[i],dom[i],imp[i]]).sort((a,b)=>b[2]-a[2]).slice(0,10).map(r=>[...r.slice(0,2),...r.slice(2).map(v=>fmt(v,6))]));
+}
+function showLinks(){
+ const q=$('linksearch').value,k=Number($('linksorder').value);
+ const results=state.sectors.map((x,i)=>({x,v:state.link[i]})).filter(({x})=>match(q,x.c,x.name)).sort((a,b)=>b.v[k]-a.v[k]);
+ table('links',results.map(({x,v})=>[x.c,x.name,...v.map(t=>fmt(t,6))]));
+ results.forEach(({v},i)=>v.forEach((t,j)=>tone($('links').rows[i].cells[j+2],t)));
+}
+$('linksearch').addEventListener('input',showLinks);$('linksorder').addEventListener('change',showLinks);
 $('search').addEventListener('input',refreshSector);$('sector').addEventListener('change',coeff);$('amount').addEventListener('input',()=>{$('result').hidden=true;$('error').textContent='';});
 $('form').addEventListener('submit',e=>{
  e.preventDefault();if(!state||$('sector').selectedIndex<0)return; const f=$('amount').valueAsNumber,j=Number($('sector').value), chosen=state.sectors[j];
  const cols=state.matrices.map(m=>m[j]);const totals=cols.map(x=>x.total*f);
  if(!Number.isFinite(f)||f<=0||!totals.every(Number.isFinite)||cols.some(x=>x.values.some(v=>!Number.isFinite(v*f)))){$('error').textContent='계산 가능한 0보다 큰 금액을 입력하세요.';$('result').hidden=true;return;}
  $('error').textContent='';$('scenario').textContent=`${state.level} · ${chosen.name} 최종수요 ${fmt(f,6)}백만원 증가`;
+ const top=state.sectors.map((x,i)=>({x,v:cols[0].values[i]*f})).filter(r=>r.v>0).sort((a,b)=>b.v-a.v).slice(0,5);
+ $('bars').replaceChildren();const heading=document.createElement('h4');heading.textContent='이 수요 증가로 생산유발액이 큰 부문 · 상위 5개 (백만원)';$('bars').append(heading);
+ for(const {x,v} of top){const box=document.createElement('div'),bar=document.createElement('div'),fill=document.createElement('span');box.textContent=`${x.c} · ${x.name}: ${fmt(v,3)}`;bar.className='meter';bar.setAttribute('aria-hidden','true');fill.style.width=(100*v/top[0].v)+'%';bar.append(fill);box.append(bar);$('bars').append(box);}
  $('totals').textContent='경제 전체 유발액 (백만원): '+labels.map((x,k)=>`${x} ${fmt(totals[k],3)}`).join(' / ');
  table('effects',state.sectors.map((x,i)=>[x.c,x.name,...cols.map(col=>col.values[i]*f)]).sort((a,b)=>b[2]-a[2]).map(r=>[...r.slice(0,2),...r.slice(2).map(v=>fmt(v,3))]));$('result').hidden=false;
 });
