@@ -59,7 +59,7 @@
         <label for="sector">수요가 증가하는 부문
           <select id="sector"></select>
         </label>
-        <label for="amount">최종수요 증가액 (백만원)
+        <label for="amount">최종수요 증가액 (백만 원)
           <input id="amount" type="number" min="0" step="any" value="100">
         </label>
       </div>
@@ -70,7 +70,7 @@
 
   <section id="output" aria-live="polite" hidden>
     <h2>2. 경제 전체 파급효과</h2>
-    <p id="scenario-label"></p>
+    <p id="scenario-label"></p><p id="meaning"></p>
     <div class="results">
       <div class="result">생산유발액<strong id="production"></strong></div>
       <div class="result">부가가치유발액<strong id="value-added"></strong></div>
@@ -156,7 +156,7 @@
 
     if (!Number.isFinite(amount) || amount <= 0 ||
         !results.every(Number.isFinite)) {
-      error.textContent = '계산 가능한 0보다 큰 금액을 백만원 단위로 입력하세요.';
+      error.textContent = '계산 가능한 0보다 큰 금액을 백만 원 단위로 입력하세요.';
       error.hidden = false;
       output.hidden = true;
       return;
@@ -164,11 +164,12 @@
 
     error.hidden = true;
     byId('scenario-label').textContent =
-      `${name} · 최종수요 증가액 ${numberFormat.format(amount)}백만원`;
+      `${name} · 최종수요 증가액 ${numberFormat.format(amount)}백만 원`;
 
     ['production', 'value-added', 'imports'].forEach((id, index) => {
-      byId(id).textContent = `${numberFormat.format(results[index])}백만원`;
+      byId(id).textContent = `${numberFormat.format(results[index])}백만 원`;
     });
+    byId('meaning').textContent = `${name === '전체' ? '전체 공표 계수를 적용하면' : name + '의 국내 최종수요 증가로'} 경제 전체에서 약 ${numberFormat.format(results[0])}백만 원의 생산이 직접·간접으로 유발되는 것으로 추정됩니다.`;
     output.hidden = false;
   }
 
@@ -177,7 +178,7 @@
     calculate();
   });
 
-  sector.value = '4'; // 첫 화면 예시: 건설 수요 100백만원 증가
+  sector.value = '4'; // 첫 화면 예시: 건설 수요 100백만 원 증가
   calculate();
 </script>
 </body>
