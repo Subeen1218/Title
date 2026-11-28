@@ -9,21 +9,22 @@ function options(el,list){el.replaceChildren(...list.map(x=>{const o=document.cr
 function invalidate(){result=null;$('results').hidden=true;}
 async function load(buffer){
  invalidate();basket=[];renderBasket();
- for(const id of ['sheet','row','sector','add','run','row-search','col-search','sector-search','amount'])$(id).disabled=true;
+ for(const id of ['sheet','row','sector','add','run','row-search','col-search','col-order','sector-search','amount'])$(id).disabled=true;
  if(worker)worker.terminate();for(const p of requests.values())p.reject(Error('데이터 다시 로드'));requests.clear();startWorker();
  try{info=await call('init',buffer);sectors=info.sectors;state={sectors:sectors.map(x=>({c:x.code,name:x.name})),link:info.link};$('linksection').hidden=false;$('linksearch').value='';showLinks();options($('sector'),sectors);showMetrics();$('sector-search').value='';$('row-search').value='';$('col-search').value='';$('sheet').replaceChildren(...info.sheets.map(s=>{const o=text('option',s);o.value=s;return o;}));
  $('validation').textContent=JSON.stringify(info.residuals,null,2)+'\n최대 절대 잔차: 허용값 1e-8 미만';
- for(const id of ['sheet','row','sector','add','run','row-search','col-search','sector-search','amount'])$(id).disabled=false;
+ for(const id of ['sheet','row','sector','add','run','row-search','col-search','col-order','sector-search','amount'])$(id).disabled=false;
  await explore();$('status').textContent='준비 완료 · '+sectors.length+'개 부문 · '+info.sheets.length+'개 시트 · 계수 검증 통과';
  }catch(e){$('status').textContent='준비 실패: '+e.message+' — 새로고침 후 재시도하세요.';}
 }
 let exploreSeq=0;
 async function explore(){const seq=++exploreSeq;try{const d=await call('explore',{sheet:$('sheet').value,row:$('row').value});if(seq!==exploreSeq)return;rowChoices=d.rows;filterRows(d.selected);cells=d.cells;$('unit').textContent=d.unit;$('explore-caption').textContent=$('sheet').value+' / 행: '+d.selected+' '+d.name;renderCells();}catch(e){$('status').textContent=e.message;}}
 function filterRows(selected){const q=$('row-search').value.trim();options($('row'),rowChoices.filter(r=>(r.code+' '+r.name).includes(q)));if([...$('row').options].some(o=>o.value===selected))$('row').value=selected;}
-function renderCells(){const q=$('col-search').value.trim();$('cells').replaceChildren(...cells.filter(c=>(c.code+' '+c.name).includes(q)).map(c=>{const tr=document.createElement('tr');for(const v of [c.code,c.name,c.value===null?'빈 셀':typeof c.value==='number'?fmt(c.value):c.value])tr.append(text('td',v));return tr;}));}
+function renderCells(){const q=$('col-search').value.trim();const rows=cells.filter(c=>(c.code+' '+c.name).includes(q));if($('col-order').value==='desc')rows.sort((a,b)=>{const x=Number.isFinite(a.value),y=Number.isFinite(b.value);return x&&y?b.value-a.value:Number(y)-Number(x);});$('cells').replaceChildren(...rows.map(c=>{const tr=document.createElement('tr');for(const v of [c.code,c.name,c.value===null?'빈 셀':typeof c.value==='number'?fmt(c.value):c.value])tr.append(text('td',v));return tr;}));}
 $('sheet').onchange=()=>{$('row-search').value='';$('row').replaceChildren();explore();};$('row').onchange=explore;
 $('row-search').oninput=()=>{filterRows();if($('row').value)explore();else{$('cells').replaceChildren();$('explore-caption').textContent='일치하는 행이 없습니다.';}};
 $('col-search').oninput=renderCells;
+$('col-order').onchange=renderCells;
 $('sector-search').oninput=()=>{const q=$('sector-search').value.trim();options($('sector'),sectors.filter(s=>(s.code+' '+s.name).includes(q)));showMetrics();};
 function renderBasket(){$('basket').replaceChildren(...basket.map((s,i)=>{const li=text('li',s.code+' '+s.name+' / '+fmt(s.amount)+'백만 원 ');const b=text('button','삭제');b.type='button';b.onclick=()=>{basket.splice(i,1);invalidate();renderBasket();};li.append(b);return li;}));$('sim-status').textContent=basket.length?basket.length+'개 입력 준비. 계산 버튼을 누르세요.':'시나리오를 추가하세요.';}
 $('scenario').onsubmit=e=>{e.preventDefault();const amount=Number($('amount').value),s=sectors.find(s=>s.code===$('sector').value);if(!s||!Number.isFinite(amount)||amount<=0){$('sim-status').textContent='산업과 양의 증가액을 확인하세요.';return;}basket.push({...s,amount});invalidate();renderBasket();};
@@ -43,7 +44,7 @@ $('load-basic').onclick=async()=>{
 $('level').onchange=()=>{
  if(worker)worker.terminate();worker=null;for(const p of requests.values())p.reject(Error('분류 변경'));requests.clear();++exploreSeq;
  info=null;state=null;basket=[];sectors=[];cells=[];rowChoices=[];invalidate();renderBasket();$('linksection').hidden=true;$('cells').replaceChildren();$('sector-metrics').textContent='';$('unit').textContent='';$('explore-caption').textContent='선택한 분류를 불러오세요.';
- for(const id of ['sheet','row','sector','add','run','row-search','col-search','sector-search','amount'])$(id).disabled=true;
+ for(const id of ['sheet','row','sector','add','run','row-search','col-search','col-order','sector-search','amount'])$(id).disabled=true;
  $('status').textContent='선택한 분류를 불러오세요.';
 };
 function showMetrics(){const j=sectors.findIndex(x=>x.code===$('sector').value);if(j<0||!info){$('sector-metrics').textContent='';return;}
